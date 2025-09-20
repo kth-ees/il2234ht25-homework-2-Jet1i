@@ -1,0 +1,29 @@
+module counter4 (
+  input  logic       clk,
+  input  logic       rst_n,       // async low
+  input  logic       en,          // enable (ripple from lower slice)
+  input  logic       load,        // sync load
+  input  logic [3:0] load_val,
+  output logic [3:0] q,
+  output logic       carry        // asserted when this slice wraps F->0 (and en)
+);
+  logic [3:0] next_q;
+
+  always_comb begin
+    if (load) begin
+      next_q  = load_val;
+    end else if (en) begin
+      next_q  = q + 4'd1;
+    end else begin
+      next_q  = q;
+    end
+  end
+
+  // wrap pulse when counting from 4'hF to 0
+  assign carry = en && !load && (q == 4'hF);
+
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) q <= 4'h0;
+    else        q <= next_q;
+  end
+endmodule
